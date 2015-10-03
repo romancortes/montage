@@ -163,7 +163,6 @@ var Template = Montage.specialize( /** @lends Template# */ {
     initWithDocument: {
         value: function (_document, _require) {
             var self = this;
-
             this._require = _require;
             this.setDocument(_document);
 
@@ -279,6 +278,29 @@ var Template = Montage.specialize( /** @lends Template# */ {
         }
     },
 
+    loadResourcesInTargetDocumentIfNeeded: {
+      value: function (targetDocument) {
+        var resources = this.getResources(), self = this;
+        if (!resources.resourcesLoaded() && resources.hasResources()) {
+            //console.log(self._baseUrl + " loadResources");
+            // Start preloading the resources as soon as possible, no
+            // need to wait for them as the draw cycle will take care
+            // of that when loading the stylesheets into the document.
+            return resources.loadResources(targetDocument).then(function(value){
+              var rootComponent = targetDocument.rootComponent,
+                  style;
+                  styles = resources.createStylesForDocument(targetDocument);
+
+              for (var i = 0, style; (style = styles[i]); i++) {
+                    //   console.log("_addTemplateStyles "+style.href);
+                   rootComponent.addStylesheet(style);
+              }
+
+            });
+      }
+    }
+    },
+
     /**
      * @param instances {Object} The instances to use in the serialization
      *        section of the template, when given they will be used instead of
@@ -294,6 +316,11 @@ var Template = Montage.specialize( /** @lends Template# */ {
                 part = new DocumentPart(),
                 templateObjects,
                 templateParameters;
+
+                // console.log("####instantiateWithInstances targetDocument is ."+targetDocument.location+" window.document is "+window.document.location);
+                // console.log("####instantiateWithInstances targetDocument == window.document is "+(targetDocument == window.document));
+
+            this.loadResourcesInTargetDocumentIfNeeded(targetDocument);
 
             instances = instances || this._instances;
             fragment = this._createMarkupDocumentFragment(targetDocument);
@@ -313,14 +340,28 @@ var Template = Montage.specialize( /** @lends Template# */ {
                 self._invokeDelegates(part, instances);
                 part.stopActingAsTopComponent();
 
-                resources = self.getResources();
-                if (!resources.resourcesLoaded() && resources.hasResources()) {
-                    // Start preloading the resources as soon as possible, no
-                    // need to wait for them as the draw cycle will take care
-                    // of that when loading the stylesheets into the document.
-                    resources.loadResources(targetDocument)
-                    .done();
-                }
+//                 resources = self.getResources();
+//                 if (!resources.resourcesLoaded() && resources.hasResources()) {
+// //                    console.log(self._baseUrl + " loadResources");
+//                     // Start preloading the resources as soon as possible, no
+//                     // need to wait for them as the draw cycle will take care
+//                     // of that when loading the stylesheets into the document.
+//                     resources.loadResources(targetDocument).then(function(value){
+//                       var rootComponent = targetDocument.rootComponent,
+//                           style,
+//                           resources = self.getResources();
+//                           styles = resources.createStylesForDocument(targetDocument);
+// ;
+//
+//                       console.log("HERE");
+//                       for (var i = 0, style; (style = styles[i]); i++) {
+//                             //   console.log("_addTemplateStyles "+style.href);
+//                            rootComponent.addStylesheet(style);
+//                       }
+//
+//                     })
+//                     .done();
+//                 }
                 return part;
             });
         }
@@ -1505,7 +1546,6 @@ var TemplateResources = Montage.specialize( /** @lends TemplateResources# */ {
         value: function (element, targetDocument) {
             var url,
                 documentResources;
-
             url = element.getAttribute("href");
 
             if (url) {

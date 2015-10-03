@@ -1362,7 +1362,6 @@ var Component = exports.Component = Target.specialize( /** @lends Component.prot
                 if (this.hasTemplate) {
                     this._instantiateTemplate().then(function () {
                         self._isComponentExpanded = true;
-                        self._addTemplateStyles();
                         self.needsDraw = true;
                         deferred.resolve();
                     }, deferred.reject);
@@ -1849,25 +1848,6 @@ var Component = exports.Component = Target.specialize( /** @lends Component.prot
             if (this._newDomContent) {
                 this._newDomContent = null;
                 this._shouldClearDomContentOnNextDraw = false;
-            }
-        }
-    },
-
-    _addTemplateStyles: {
-        value: function () {
-            var part = this._templateDocumentPart,
-                resources,
-                styles,
-                _document;
-
-            if (part) {
-                resources = part.template.getResources();
-                _document = this.element.ownerDocument;
-                styles = resources.createStylesForDocument(_document);
-
-                for (var i = 0, style; (style = styles[i]); i++) {
-                    this.rootComponent.addStylesheet(style);
-                }
             }
         }
     },
@@ -3264,6 +3244,7 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype # *
         value: function (style) {
             this._stylesheets.push(style);
             this._needsStylesheetsDraw = true;
+            this.needsDraw = true;
         }
     },
 
@@ -3574,6 +3555,7 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype # *
 
 var rootComponent = new RootComponent().init();
 exports.__root__ = rootComponent;
+window.document.rootComponent = rootComponent;
 
 function loggerToString (object) {
     if (!object) return "NIL";
@@ -3681,4 +3663,3 @@ Component.addAttributes( /** @lends module:montage/ui/control.Control# */ {
 */
     title: null
 });
-
