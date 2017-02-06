@@ -100,6 +100,8 @@ exports.PropertyBlueprint = Montage.specialize( /** @lends PropertyBlueprint# */
             }
             this._setPropertyWithDefaults(serializer, "defaultValue", this.defaultValue);
             this._setPropertyWithDefaults(serializer, "helpKey", this.helpKey);
+            this._setPropertyWithDefaults(serializer, "synonym", this.synonym);
+            this._setPropertyWithDefaults(serializer, "inversePropertyName", this.inversePropertyName);
         }
     },
 
@@ -122,6 +124,8 @@ exports.PropertyBlueprint = Montage.specialize( /** @lends PropertyBlueprint# */
             this.enumValues = this._getPropertyWithDefaults(deserializer, "enumValues");
             this.defaultValue = this._getPropertyWithDefaults(deserializer, "defaultValue");
             this.helpKey = this._getPropertyWithDefaults(deserializer, "helpKey");
+            this.synonym = this._getPropertyWithDefaults(deserializer, "synonym");
+            this.inversePropertyName = this._getPropertyWithDefaults(deserializer, "inversePropertyName");
         }
     },
 
