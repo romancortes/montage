@@ -511,7 +511,7 @@ exports.RawDataService = DataService.specialize(/** @lends RawDataService.protot
         value:function(type, rawData, context) {
             var dataIdentifier = this.dataIdentifierForTypeRawData(type,rawData);
                 //Record snapshot before we may create an object
-            this.recordSnapshot(dataIdentifier, rawData);
+            if(dataIdentifier) this.recordSnapshot(dataIdentifier, rawData);
             //iDataIdentifier argument should be all we need later on
             return this.getDataObject(type, rawData, context, dataIdentifier);
         }
@@ -521,13 +521,16 @@ exports.RawDataService = DataService.specialize(/** @lends RawDataService.protot
         value: undefined
     },
 
+    _dataIdentifierScope: {
+        value: new Scope(undefined)
+    },
     //This should belong on the
     //Gives us an indirection layer to deal with backward compatibility.
     dataIdentifierForTypeRawData: {
         value: function (type, rawData) {
             var mapping = this.mappingWithType(type),
                 rawDataPrimaryKeys = mapping ? mapping.rawDataPrimaryKeyExpressions : null,
-                scope = new Scope(rawData),
+                scope,
                 rawDataPrimaryKeysValues,
                 dataIdentifier, dataIdentifierMap, primaryKey;
 
@@ -538,7 +541,8 @@ exports.RawDataService = DataService.specialize(/** @lends RawDataService.protot
                 if(!dataIdentifierMap) {
                     this._typeIdentifierMap.set(type,(dataIdentifierMap = new Map()));
                 }
-
+                scope = this._dataIdentifierScope;
+                Scope.call(this._dataIdentifierScope,rawData);
                 for(var i=0, expression; (expression = rawDataPrimaryKeys[i]); i++) {
                     rawDataPrimaryKeysValues = rawDataPrimaryKeysValues || [];
                     rawDataPrimaryKeysValues[i] = expression(scope);
@@ -980,9 +984,12 @@ exports.RawDataService = DataService.specialize(/** @lends RawDataService.protot
                     mapping = mappings[i];
                     subType = mapping.criteria.evaluate(rawData) && mapping.type;
                 }
+                return subType ? this._descriptorForParentAndRawData(subType, rawData) : parent;
+            }
+            else {
+                return parent;
             }
 
-            return subType ? this._descriptorForParentAndRawData(subType, rawData) : parent;
         }
     },
 
