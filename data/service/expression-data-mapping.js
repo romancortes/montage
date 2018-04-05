@@ -192,7 +192,6 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         },
         set: function (value) {
             this._objectDescriptor = value;
-            this._objectDescriptorReference = new ObjectDescriptorReference().initWithValue(value);
         }
     },
 
@@ -203,6 +202,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
      */
     objectDescriptorReference: {
         get: deprecate.deprecateMethod(void 0, function () {
+            if(!this._objectDescriptorReference && this._objectDescriptor) {
+                this._objectDescriptorReference = new ObjectDescriptorReference().initWithValue(this._objectDescriptor);
+            }
             return this._objectDescriptorReference ? this._objectDescriptorReference.promise(require) :
                                                      Promise.resolve(null);
         }, "objectDescriptorReference", "objectDescriptor", true),
@@ -357,7 +359,6 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         },
         set: function (value) {
             this._schemaDescriptor = value;
-            this._schemaDescriptorReference = new ObjectDescriptorReference().initWithValue(value);
         }
     },
 
@@ -368,6 +369,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
      */
     schemaDescriptorReference: {
         get: deprecate.deprecateMethod(void 0, function () {
+            // if(!this._schemaDescriptorReference) {
+            //     this._schemaDescriptorReference = new ObjectDescriptorReference().initWithValue(this._schemaDescriptor);
+            // }
             return this._schemaDescriptorReference ? this._schemaDescriptorReference.promise(require) :
                                                      Promise.resolve(null);
         }, "schemaDescriptorReference", "schemaDescriptor", true),
