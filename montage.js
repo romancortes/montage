@@ -19,7 +19,7 @@
     // reassigning causes eval to not use lexical scope.
     var globalEval = eval,
     /*jshint evil:true */
-    global = globalEval('this'); 
+    global = globalEval('this');
     /*jshint evil:false */
 
     // Here we expose global for legacy mop support.
@@ -30,7 +30,7 @@
     var browser = {
 
         makeResolve: function () {
-            
+
             try {
 
                 var testHost = "http://example.org",
@@ -131,7 +131,7 @@
                         if (script.dataset) {
                             for (name in script.dataset) {
                                 if (script.dataset.hasOwnProperty(name)) {
-                                    this._params[name] = script.dataset[name];   
+                                    this._params[name] = script.dataset[name];
                                 }
                             }
                         } else if (script.attributes) {
@@ -246,7 +246,7 @@
                         // this causes the function to exit if there are any remaining
                         // scripts loading, on the first iteration.  consider it
                         // equivalent to an array length check
-                        return;   
+                        return;
                     }
                 }
 
@@ -343,10 +343,9 @@
                 }
 
                 // Load the application
-
                 var appProto = applicationRequire.packageDescription.applicationPrototype,
                     applicationLocation, appModulePromise;
-            
+
                 if (appProto) {
                     applicationLocation = MontageReviver.parseObjectLocationId(appProto);
                     appModulePromise = applicationRequire.async(applicationLocation.moduleId);
@@ -354,24 +353,53 @@
                     appModulePromise = montageRequire.async("core/application");
                 }
 
+                // Load main.datareel/main.mjson
+                var mainDatareel = applicationRequire.packageDescription.mainDatareel,
+                    mainDatareelLocation, mainDatareelModulePromise;
+
+                if (mainDatareel) {
+                    mainDatareelLocation = MontageReviver.parseObjectLocationId(mainDatareel);
+                    mainDatareelModulePromise = applicationRequire.async(mainDatareelLocation.moduleId);
+                } else {
+                    //mainDatareelModulePromise = applicationRequire.makeRequire("data/main.datareel/main.mjson").async("data/main.datareel/main.mjson");
+                    mainDatareelModulePromise = applicationRequire.async("data/main.datareel/main.mjson");
+                }
+
+
+
                 return appModulePromise.then(function (exports) {
                     var Application = exports[(applicationLocation ? applicationLocation.objectName : "Application")];
                     application = new Application();
                     defaultEventManager.application = application;
                     application.eventManager = defaultEventManager;
 
-                    return application._load(applicationRequire, function () {
-                        if (params.module) {
-                            // If a module was specified in the config then we initialize it now
-                            applicationRequire.async(params.module);
-                        }
-                        if (typeof global.montageDidLoad === "function") {
-                            global.montageDidLoad();
-                        }
+                    return mainDatareelModulePromise.then(function(mainDataSerciceExport) {
+                        // fulfillment
+                        application.service = mainDataSerciceExport.montageObject;
+                        return application;
+                    }, function(reason) {
+                        // rejection
+                        console.log("App doesn't have a datareel");
+                        return application;
+                    }).finally(function() {
 
-                        if (window.MontageElement) {
-                            MontageElement.ready(applicationRequire, application, MontageReviver);
-                        }
+                        application._load(applicationRequire, function () {
+                            if (params.module) {
+                                // If a module was specified in the config then we initialize it now
+                                applicationRequire.async(params.module);
+                            }
+                            if (typeof global.montageDidLoad === "function") {
+                                global.montageDidLoad();
+                            }
+
+                            if (window.MontageElement) {
+                                MontageElement.ready(applicationRequire, application, MontageReviver);
+                            }
+                        });
+
+                        // settled (resolved or rejected)
+                        console.log("returnApp doesn't have a datareel");
+                        return application;
                     });
                 });
             });
@@ -383,7 +411,7 @@
         deserializer.init(mjson, require, void 0, require.location + moduleId);
         return deserializer.deserializeObject();
     };
-    
+
     exports.initMontageCustomElement = function () {
         if (typeof window.customElements === 'undefined' || typeof window.Reflect === 'undefined') {
             return void 0;
@@ -476,7 +504,7 @@
             if (!this._instance) {
                 var self = this,
                     component = this.instantiateComponent();
-                
+
                 return this.findParentComponent().then(function (parentComponent) {
                     self._instance = component;
                     parentComponent.addChildComponent(component);
@@ -528,7 +556,7 @@
                 mainEnterDocument = component.enterDocument,
                 mainTemplateDidLoad = component.templateDidLoad,
                 proxyElement = this.findProxyForElement(this);
-            
+
             if (proxyElement) {
                 var observedAttributes = this.observedAttributes,
                     observedAttribute,
@@ -544,7 +572,7 @@
                     }
                 }
             }
-                
+
             this.application.eventManager.registerTargetForActivation(shadowRoot);
 
             component.templateDidLoad = function () {
@@ -802,10 +830,10 @@
                     montageRequire.inject("core/mini-url", URL);
                     montageRequire.inject("core/promise", {Promise: Promise});
                     promiseRequire.inject("bluebird", Promise);
-                    
+
                     // This prevents bluebird to be loaded twice by mousse's code
                     promiseRequire.inject("js/browser/bluebird", Promise);
-                    
+
                     // install the linter, which loads on the first error
                     config.lint = function (module) {
                         montageRequire.async("core/jshint")
