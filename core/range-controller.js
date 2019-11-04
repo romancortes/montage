@@ -581,7 +581,6 @@ var RangeController = exports.RangeController = Montage.specialize( /** @lends R
         value: function (index, length, values) {
             var result = this.content.swap.apply(this.content, arguments);
             if (values) {
-                // TODO WTF index vs index
                 for (index = 2; index < values.length; index++) {
                     this.handleAdd(values[index]);
                 }
